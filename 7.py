@@ -5,7 +5,6 @@ class node:
         self.left = None
         self.right = None
         self.parent = None
-        self.passed = None
 
 
 class binTree:
@@ -14,50 +13,18 @@ class binTree:
         self.root = None
         self.nodes = {}
 
-    def is_binTree(self):
-        node = self.root
-        prev = None
-        next = None
-        while True:
-            if node.left and not node.left.passed:
-                node = node.left
-            elif node.right and not node.right.passed:
-                if not prev:
-                    prev = node
-                elif not next:
-                    next = node
-                else:
-                    prev = next
-                    next = node
-                if next:
-                    if prev.key >= next.key and prev.right != next:
-                        return False
-                    elif prev.key > next.key and prev.right == next:
-                        return False
-                node.passed = True
-                node = node.right
+    def is_binTree(self, node):
+        max_key = node.key
+        while node.parent:
+            parent = node.parent
+            if parent.left == node:
+                if parent.key <= max_key:
+                    return False
             else:
-                if not node.passed:
-                    if not prev:
-                        prev = node
-                    elif not next:
-                        next = node
-                    else:
-                        prev = next
-                        next = node
-                    if next:
-                        if prev.key >= next.key and prev.right != next:
-                            return False
-                        elif prev.key > next.key and prev.right == next:
-                            return False
-                node.passed = True
-                if node != self.root:
-                    while node.passed:
-                        node = node.parent
-                        if node == self.root:
-                            break
-                else:
-                    break
+                if parent.key > max_key:
+                    return False
+            max_key = max(max_key, parent.key)
+            node = parent
         return True
 
 
@@ -69,31 +36,26 @@ with open('input.txt') as f:
         exit()
     tree = binTree()
     data = []
+    leaves = []
     for i in range(0, n):
         data.append(list(map(int, f.readline().split())))
         tree.nodes[i] = node()
         tree.nodes[i].key = data[i][0]
-
+        if data[i-1][1] == -1 and data[i-1][2] == -1:
+            leaves.append(i)
 for i in range(0, n):
     if data[i][1] != -1:
         tree.nodes[i].left = tree.nodes[data[i][1]]
         tree.nodes[data[i][1]].parent = tree.nodes[i]
-        if tree.nodes[i].left.key >= tree.nodes[i].key:
-            with open('output.txt', 'w') as f:
-                f.write('INCORRECT')
-                exit()
     if data[i][2] != -1:
         tree.nodes[i].right = tree.nodes[data[i][2]]
         tree.nodes[data[i][2]].parent = tree.nodes[i]
-        if tree.nodes[i].key > tree.nodes[i].right.key:
-            with open('output.txt', 'w') as f:
-                f.write('INCORRECT')
-                exit()
     if i == 0:
         tree.root = tree.nodes[i]
 
-res = tree.is_binTree()
-if res == True:
-    print('CORRECT')
-else:
-    print('INCORRECT')
+for i in leaves:
+    res = tree.is_binTree(tree.nodes[i])
+    if not res:
+        print('INCORRECT')
+        exit()
+print('CORRECT')
